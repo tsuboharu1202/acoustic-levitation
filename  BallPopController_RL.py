@@ -30,25 +30,23 @@ from collections import deque
 
 
 scale = 40
+power_max = 18
 
 # 状態の離散化
-velocity_bins = np.array([-np.inf,-5 -3,-2,-1, 0,1,2 , 3,5, np.inf])/scale
-distance_bins = np.array([0,  1, 3, 5, 7, 10,15, np.inf])/scale
+velocity_bins = np.array([-np.inf,-5 -3,-2,-1,-0.5, 0,0.5,1,2 , 3,5, np.inf])/scale
+distance_bins = np.array([0,0.5,  1,2, 3, 5, 7, 10,15, np.inf])/scale
 theta_bins = np.linspace(-np.pi, np.pi, 12)
 
 # 行動の離散化
-forces = np.array([7,8,9,10, 12, 14])/scale
+forces = np.array([6,7,8,9,10,11, 12, 14])/power_max
 angles = np.array([-np.pi/3,-np.pi/4,-np.pi/6,-np.pi/12,0,np.pi/12,np.pi/6 ,np.pi/4,np.pi/3])
 
 radius = 0.05
 epsilon = 0.01
 
-force_time = 10
 
 
-# 力の遅延を表すキューの長さ
-delay_steps = 30/force_time
-state_action_reward_queue = deque()
+
 
 
 class BallPopController_RL:
@@ -184,7 +182,7 @@ class BallPopController_RL:
         self.writer = csv.writer(self.f)
 
     #Q_tableの更新
-    def update_q_table(self,state, action, reward, next_state,):
+    def update_q_table(self,state, action, reward, next_state):
         best_next_action = np.argmax(self.Q_table[next_state])
         best_next_action = (best_next_action // len(self.angles), best_next_action % len(self.angles))
         td_target = reward + self.gamma * self.Q_table[next_state + best_next_action]
@@ -332,9 +330,9 @@ class BallPopController_RL:
                     state_action_reward_queue.append((self.prevState, self.prevAction, reward, self.state))
 
 
-                    if len(state_action_reward_queue) > delay_steps:
-                        delayed_state, delayed_action, delayed_reward, delayed_next_state = state_action_reward_queue.popleft()
-                        self.update_q_table(delayed_state, delayed_action, reward, delayed_next_state)
+                    # if len(state_action_reward_queue) > delay_steps:
+                    #     delayed_state, delayed_action, delayed_reward, delayed_next_state = state_action_reward_queue.popleft()
+                    self.update_q_table(self.prevState, self.prevAction, reward, self.state)
 
                     # targetU = u + velU * 3 * self.timeCoefficient
                     # targetV = v + velself.V * 3 * self.timeCoefficient
